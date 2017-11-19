@@ -25,7 +25,10 @@ else:
 
 # Progress Bar
 def progress(count, total, status=''):
-    rows, columns = os.popen('stty size', 'r').read().split()
+
+    
+    rows, columns = 25, 80
+
     bar_len = int(columns) - 40
 
     filled_len = int(round(bar_len * count / float(total)))
@@ -73,6 +76,7 @@ def parseFacultyPage(br, facultyID):
     br.open('https://vtop.vit.ac.in/student/stud_home.asp')
     response = br.open('https://vtop.vit.ac.in/student/official_detail_view.asp?empid=' + str(facultyID))
     html = response.read()
+    
     soup = BeautifulSoup(html)
     tables = soup.findAll('table')
 
@@ -109,6 +113,14 @@ def parseFacultyPage(br, facultyID):
     result = {'empid': facultyID, 'name': name, 'school': school, 'designation': designation, 'room': room, 'intercom': intercom, 'email': email, 'division': division, 'open_hours': openHours}
     with open('output/' + str(facultyID) + '.json', 'w') as outfile:
         json.dump(result, outfile,indent=4)
+    
+    outputPath = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'photos')
+    if os.path.isdir(outputPath) is False:
+        os.makedirs(outputPath)
+    filename = os.path.join(outputPath, str(facultyID) + '.jpg')
+    br.retrieve('https://vtop.vit.ac.in/student/emp_photo.asp', filename)
+    br.back()
+
     return result
 
 
@@ -141,9 +153,6 @@ if __name__ == '__main__':
     parser.add_argument("password", help="Your Student Login Password")
     args = parser.parse_args()
 
-    try:
-        aggregate(args.regno, args.password)
-    except Exception, e:
-        print e
-        if e.code==403:
-            print 'Disallowed to access the page. Please check your internet connection.'
+    
+    aggregate(args.regno, args.password)
+   
